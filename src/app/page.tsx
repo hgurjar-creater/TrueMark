@@ -1,101 +1,93 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/session'
+import { Logo } from '@/components/logo'
 
-export default function Home() {
+const features = [
+  {
+    title: 'Approved sources only',
+    body: 'Every finding points to a rule, fact or term your administrator approved, together with the exact quoted span that triggered it. Findings without a verified source are discarded.',
+  },
+  {
+    title: 'Human control',
+    body: 'TrueMark suggests; people decide. You accept, edit or dismiss each finding with a reason, and nothing is rewritten or published automatically.',
+  },
+  {
+    title: 'Learning over time',
+    body: 'Reviewer decisions reveal which guidelines are unclear enough to keep causing problems, so the guidelines themselves improve.',
+  },
+]
+
+export default async function Home() {
+  const session = await getSession()
+  if (session) redirect('/dashboard')
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="flex min-h-screen flex-col">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
+          <Logo />
+          <nav className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500"
+            >
+              Create account
+            </Link>
+          </nav>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </header>
+
+      <section className="mx-auto w-full max-w-6xl px-6 pb-16 pt-20 text-center">
+        <p className="mx-auto mb-4 inline-flex rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-700">
+          Prepublication brand governance
+        </p>
+        <h1 className="mx-auto max-w-3xl text-balance text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          Catch off-brand content before the public sees it
+        </h1>
+        <p className="mx-auto mt-5 max-w-2xl text-balance text-lg leading-relaxed text-slate-600">
+          TrueMark reviews drafts against your approved rules, facts and terms while there is still
+          time to fix them. Each issue is explained, linked to its source, and paired with a change
+          that keeps what you meant to say.
+        </p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Link
+            href="/register"
+            className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500"
+          >
+            Start reviewing
+          </Link>
+          <Link
+            href="/login"
+            className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            Sign in
+          </Link>
+        </div>
+      </section>
+
+      <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 pb-20 sm:grid-cols-3">
+        {features.map((feature) => (
+          <div key={feature.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-base font-semibold text-slate-900">{feature.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">{feature.body}</p>
+          </div>
+        ))}
+      </section>
+
+      <footer className="mt-auto border-t border-slate-200 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-6 py-6 text-center text-xs leading-relaxed text-slate-500">
+          Transparency: automated reviews may use AI assistance (Google Gemini). Every AI call is
+          logged, findings without a verified approved source are discarded, and reviewer decisions
+          always take precedence over AI suggestions.
+        </div>
       </footer>
-    </div>
-  );
+    </main>
+  )
 }
