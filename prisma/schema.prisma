@@ -1,0 +1,170 @@
+// TrueMark — Prepublication Brand Governance
+// Prisma 5, SQLite for local development, PostgreSQL for hosted deployment.
+// NOTE: SQLite does not support Prisma enums, so role/status fields are String
+// columns validated with zod in src/lib/validation.ts. This schema is valid on
+// Postgres without changes; switch to enums there only if you want DB-level
+// constraints as well.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("CREATOR") // ADMIN | MANAGER | CREATOR
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  submissions Submission[]
+  versions    Version[]
+  comments    Comment[]
+  auditLogs   AuditLog[]
+  findings    Finding[]    @relation("FindingDecidedBy")
+}
+
+// An approved rule the review pipeline may cite (e.g. R-001).
+model Rule {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  title     String
+  text      String
+  category  String?
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  findings Finding[]
+}
+
+// An approved fact with a source and optional expiry (e.g. F-001).
+model Fact {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  statement String
+  source    String
+  expiresAt DateTime?
+  approved  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  findings Finding[]
+}
+
+// A preferred or banned term with a reason (e.g. T-001).
+model Term {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  value       String
+  status      String // PREFERRED | BANNED
+  replacement String?
+  reason      String
+  approved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  findings Finding[]
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  channel   String
+  purpose   String
+  status    String   @default("IN_REVIEW") // IN_REVIEW | CHANGES_REQUESTED | APPROVED | PUBLISHED
+  creatorId String
+  creator   User     @relation(fields: [creatorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  versions Version[]
+  findings Finding[]
+  comments Comment[]
+  aiLogs   AiCallLog[]
+}
+
+// Version 1 is the original submission; each accepted change creates the next.
+model Version {
+  id            String     @id @default(cuid())
+  submissionId  String
+  submission    Submission @relation(fields: [submissionId], references: [id])
+  versionNumber Int
+  content       String
+  createdById   String
+  createdBy     User       @relation(fields: [createdById], references: [id])
+  note          String?
+  createdAt     DateTime   @default(now())
+
+  @@unique([submissionId, versionNumber])
+}
+
+// A finding must always point at an approved source (rule, fact or term) and
+// carry a verbatim quote from the reviewed draft. Rows that cannot satisfy
+// both are discarded by the verifier and never stored.
+model Finding {
+  id              String     @id @default(cuid())
+  submissionId    String
+  submission      Submission @relation(fields: [submissionId], references: [id])
+  reviewedVersion Int
+  sourceType      String // RULE | FACT | TERM
+  ruleId          String?
+  rule            Rule?      @relation(fields: [ruleId], references: [id])
+  factId          String?
+  fact            Fact?      @relation(fields: [factId], references: [id])
+  termId          String?
+  term            Term?      @relation(fields: [termId], references: [id])
+  sourceCode      String // denormalised for display, e.g. R-001
+  quotedSpan      String
+  explanation     String
+  suggestedFix    String?
+  severity        String // LOW | MEDIUM | HIGH
+  confidence      Float
+  origin          String // DETERMINISTIC | AI
+  status          String     @default("OPEN") // OPEN | ACCEPTED | EDITED | DISMISSED
+  decidedById     String?
+  decidedBy       User?      @relation("FindingDecidedBy", fields: [decidedById], references: [id])
+  decisionNote    String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Comment {
+  id           String     @id @default(cuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id])
+  body         String
+  createdAt    DateTime   @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+}
+
+// Disclosure requirement: every external AI call is logged and inspectable.
+model AiCallLog {
+  id           String      @id @default(cuid())
+  submissionId String?
+  submission   Submission? @relation(fields: [submissionId], references: [id])
+  provider     String // "gemini" | "mock"
+  model        String
+  ok           Boolean
+  error        String?
+  createdAt    DateTime    @default(now())
+}
