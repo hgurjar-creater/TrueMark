@@ -123,6 +123,8 @@ model Finding {
   term            Term?      @relation(fields: [termId], references: [id])
   sourceCode      String // denormalised for display, e.g. R-001
   quotedSpan      String
+  spanStart       Int? // character offsets of the span inside the reviewed version
+  spanEnd         Int?
   explanation     String
   suggestedFix    String?
   severity        String // LOW | MEDIUM | HIGH

@@ -79,16 +79,35 @@ src/app/(pages)             # landing, login, register, dashboard, admin overvie
 - Registration always creates a CREATOR account; ADMIN/MANAGER are provisioned
   by an administrator.
 
+## End-to-end smoke test
+
+With the production server running (`npm run build && npm run start` in one
+terminal):
+
+```bash
+node scripts/smoke-test.mjs
+```
+
+It exercises the complete Round 2 path — login, submission with automated
+review, accept / edit / dismiss decisions, manager comment and approval, role
+restrictions (creator cannot approve, manager cannot decide findings),
+versioning with replacements, the audit trail and the AI-call disclosure log —
+and leaves demo data in the database for presentations.
+
 ## Build roadmap
 
-- **Phase 2** — Admin CRUD for rules, facts, terms (approve/reject workflow).
-- **Phase 3** — Review pipeline: deterministic term/fact/claim checks → BM25
-  retrieval over the approved library → Gemini (or mock) → zod validation →
-  verifier that drops findings without a known source ID or verbatim span.
-- **Phase 4** — Submission flow, findings UI (accept / edit / dismiss with
-  reason), word-level diff versions, manager comments and approval.
-- **Phase 5** — Vitest tests on the pipeline core, labelled evaluation set
+- **Done** — auth + roles, review engine (deterministic term checks + offline
+  mock provider + verifier that drops findings without an approved source and
+  verbatim span), submission flow with the findings interface (accept / edit /
+  dismiss with reason), versioned revisions with word-level comparison,
+  manager comments and approval, audit trail.
+- **Next (Member 2)** — admin CRUD for rules, facts and terms; Gemini provider
+  behind the existing review contract (`GEMINI_API_KEY` present → real model,
+  absent → mock).
+- **Phase 5** — Vitest unit tests on the pipeline core, labelled evaluation set
   (precision / recall / citation validity), deployment hardening.
+- **Round 3** — guideline-gap insights dashboard, image checks, accessibility
+  expansion, report export (stretch).
 
 ## AI-use disclosure
 

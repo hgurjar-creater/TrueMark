@@ -70,6 +70,9 @@ export default async function DashboardPage() {
             <Link href="/dashboard">
               <Logo />
             </Link>
+            <Link href="/submissions" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+              Submissions
+            </Link>
             {isAdmin && (
               <Link href="/admin" className="text-sm font-medium text-slate-600 hover:text-slate-900">
                 Admin panel
@@ -89,7 +92,8 @@ export default async function DashboardPage() {
           Welcome back, {session.name.split(' ')[0]}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Draft submission and review arrive in the next build phase. Everything below is live data.
+          Submit drafts, respond to findings, and approve content — everything is checked against
+          the approved library.
         </p>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -110,17 +114,34 @@ export default async function DashboardPage() {
         <section className="mt-8 grid gap-6 lg:grid-cols-2">
           {isCreator && (
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-slate-900">Your submissions</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-slate-900">Your submissions</h2>
+                <Link
+                  href="/submissions/new"
+                  className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500"
+                >
+                  New submission
+                </Link>
+              </div>
               {mySubmissions.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">
-                  No submissions yet. The draft submission form lands in the next build phase.
+                  No submissions yet.{' '}
+                  <Link href="/submissions/new" className="font-medium text-indigo-600 hover:underline">
+                    Submit your first draft
+                  </Link>{' '}
+                  and the review runs immediately.
                 </p>
               ) : (
                 <ul className="mt-3 divide-y divide-slate-100">
                   {mySubmissions.map((submission) => (
-                    <li key={submission.id} className="flex items-center justify-between py-2.5">
-                      <span className="text-sm font-medium text-slate-800">{submission.title}</span>
-                      <StatusChip status={submission.status} />
+                    <li key={submission.id} className="py-1">
+                      <Link
+                        href={`/submissions/${submission.id}`}
+                        className="flex items-center justify-between py-1.5 hover:opacity-80"
+                      >
+                        <span className="text-sm font-medium text-slate-800">{submission.title}</span>
+                        <StatusChip status={submission.status} />
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -136,12 +157,17 @@ export default async function DashboardPage() {
               ) : (
                 <ul className="mt-3 divide-y divide-slate-100">
                   {reviewQueue.map((submission) => (
-                    <li key={submission.id} className="flex items-center justify-between py-2.5">
-                      <span className="text-sm font-medium text-slate-800">
-                        {submission.title}
-                        <span className="ml-2 text-xs text-slate-400">by {submission.creator.name}</span>
-                      </span>
-                      <StatusChip status={submission.status} />
+                    <li key={submission.id} className="py-1">
+                      <Link
+                        href={`/submissions/${submission.id}`}
+                        className="flex items-center justify-between py-1.5 hover:opacity-80"
+                      >
+                        <span className="text-sm font-medium text-slate-800">
+                          {submission.title}
+                          <span className="ml-2 text-xs text-slate-400">by {submission.creator.name}</span>
+                        </span>
+                        <StatusChip status={submission.status} />
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -180,15 +206,20 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <ul className="mt-3 divide-y divide-slate-100">
-                {recentSubmissions.map((submission) => (
-                  <li key={submission.id} className="flex items-center justify-between py-2.5">
-                    <span className="text-sm font-medium text-slate-800">
-                      {submission.title}
-                      <span className="ml-2 text-xs text-slate-400">by {submission.creator.name}</span>
-                    </span>
-                    <StatusChip status={submission.status} />
-                  </li>
-                ))}
+                  {recentSubmissions.map((submission) => (
+                    <li key={submission.id} className="py-1">
+                      <Link
+                        href={`/submissions/${submission.id}`}
+                        className="flex items-center justify-between py-1.5 hover:opacity-80"
+                      >
+                        <span className="text-sm font-medium text-slate-800">
+                          {submission.title}
+                          <span className="ml-2 text-xs text-slate-400">by {submission.creator.name}</span>
+                        </span>
+                        <StatusChip status={submission.status} />
+                      </Link>
+                    </li>
+                  ))}
               </ul>
             )}
           </div>

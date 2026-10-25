@@ -41,3 +41,60 @@ export const loginSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+
+export const CHANNELS = [
+  'Blog post',
+  'LinkedIn',
+  'Instagram',
+  'X (Twitter)',
+  'Press release',
+  'Product page',
+  'Presentation',
+  'Advertisement',
+  'Other',
+] as const
+export type Channel = (typeof CHANNELS)[number]
+
+export const submissionSchema = z.object({
+  title: z.string().trim().min(3, 'Title must be at least 3 characters.').max(120),
+  channel: z.enum(CHANNELS),
+  purpose: z.string().trim().min(3, 'Describe the purpose of the piece.').max(500),
+  content: z.string().trim().min(20, 'The draft must be at least 20 characters.').max(20000),
+})
+
+export const decisionSchema = z
+  .object({
+    action: z.enum(['ACCEPT', 'EDIT', 'DISMISS']),
+    replacement: z.string().trim().min(1).max(2000).optional(),
+    note: z.string().trim().min(1).max(1000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.action === 'EDIT' && !data.replacement) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide the corrected text.',
+        path: ['replacement'],
+      })
+    }
+    if (data.action === 'DISMISS' && !data.note) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'A reason is required when dismissing a finding.',
+        path: ['note'],
+      })
+    }
+  })
+
+export const commentSchema = z.object({
+  body: z.string().trim().min(1, 'Write a comment first.').max(2000),
+})
+
+export const approvalSchema = z.object({
+  action: z.enum(['APPROVE', 'REQUEST_CHANGES']),
+  comment: z.string().trim().max(2000).optional(),
+})
+
+export type SubmissionInput = z.infer<typeof submissionSchema>
+export type DecisionInput = z.infer<typeof decisionSchema>
+export type CommentInput = z.infer<typeof commentSchema>
+export type ApprovalInput = z.infer<typeof approvalSchema>

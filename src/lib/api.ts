@@ -5,13 +5,13 @@ import { getSession } from './session'
 import type { SessionUser } from './session-token'
 import type { Role } from './validation'
 
-export type AuthedHandler = (req: NextRequest, session: SessionUser) => Promise<NextResponse>
+export type AuthedHandler<C> = (req: NextRequest, session: SessionUser, ctx: C) => Promise<NextResponse>
 
 // Wraps a route handler with session lookup, optional role restriction and a
 // catch-all error response. Every state-changing route in the app goes through
 // this wrapper, so authorisation is enforced on the server in one place.
-export function withAuth(roles: Role[] | null, handler: AuthedHandler) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+export function withAuth<C = unknown>(roles: Role[] | null, handler: AuthedHandler<C>) {
+  return async (req: NextRequest, ctx: C): Promise<NextResponse> => {
     const session = await getSession()
     if (!session) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
@@ -20,7 +20,7 @@ export function withAuth(roles: Role[] | null, handler: AuthedHandler) {
       return NextResponse.json({ error: 'You do not have permission to perform this action.' }, { status: 403 })
     }
     try {
-      return await handler(req, session)
+      return await handler(req, session, ctx)
     } catch (error) {
       console.error('[api] Unhandled error:', error)
       return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
