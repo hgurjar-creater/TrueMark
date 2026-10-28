@@ -10,12 +10,13 @@ function truncate(value: string): string {
 }
 
 export const POST = withAuth<Ctx>(null, async (req: NextRequest, session, { params }) => {
+  if (!session.workspaceId || session.role !== 'CREATOR') return NextResponse.json({ error: 'Only brand Creators can decide findings.' }, { status: 403 })
   const parsed = await parseJsonBody(req, decisionSchema)
   if (!parsed.ok) return parsed.response
   const { action, replacement: editedReplacement, note } = parsed.data
 
   const finding = await db.finding.findUnique({
-    where: { id: params.id },
+    where: { id: params.id, submission: { is: { workspaceId: session.workspaceId } } },
     include: {
       submission: {
         include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
@@ -30,6 +31,9 @@ export const POST = withAuth<Ctx>(null, async (req: NextRequest, session, { para
       { error: 'Only the creator of this submission can respond to its findings.' },
       { status: 403 },
     )
+  }
+  if (finding.submission.reviewStatus !== 'COMPLETED') {
+    return NextResponse.json({ error: 'Wait for all review checks to finish before deciding findings.' }, { status: 409 })
   }
   if (finding.status !== 'OPEN') {
     return NextResponse.json({ error: 'This finding has already been decided.' }, { status: 409 })

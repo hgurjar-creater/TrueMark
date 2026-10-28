@@ -6,16 +6,20 @@ import { approvalSchema } from '@/lib/validation'
 type Ctx = { params: { id: string } }
 
 export const POST = withAuth<Ctx>(['MANAGER', 'ADMIN'], async (req, session, { params }) => {
+  if (!session.workspaceId) return NextResponse.json({ error: 'This account is not assigned to a brand workspace.' }, { status: 403 })
   const parsed = await parseJsonBody(req, approvalSchema)
   if (!parsed.ok) return parsed.response
   const { action, comment } = parsed.data
 
   const submission = await db.submission.findUnique({
-    where: { id: params.id },
-    select: { id: true, status: true },
+    where: { id: params.id, workspaceId: session.workspaceId },
+    select: { id: true, status: true, reviewStatus: true },
   })
   if (!submission) {
     return NextResponse.json({ error: 'Submission not found.' }, { status: 404 })
+  }
+  if (submission.reviewStatus !== 'COMPLETED') {
+    return NextResponse.json({ error: 'Wait for the automated checks to finish before recording a manager decision.' }, { status: 409 })
   }
   if (submission.status === 'PUBLISHED') {
     return NextResponse.json({ error: 'This submission is already published.' }, { status: 409 })

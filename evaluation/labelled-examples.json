@@ -1,0 +1,34 @@
+[
+  {
+    "id": "banned-cheap",
+    "title": "Evaluation: banned price language",
+    "channel": "Blog post",
+    "purpose": "Explain the product to a potential customer.",
+    "content": "TrueMark is a cheap and simple way for teams to review brand content before publication.",
+    "expectedSourceCodes": ["T-001"]
+  },
+  {
+    "id": "guaranteed-claim",
+    "title": "Evaluation: unsupported guarantee",
+    "channel": "Product page",
+    "purpose": "Describe what the review workflow does.",
+    "content": "The word guaranteed is listed here as a terminology example, not as a product promise. The reviewer should flag the word without inventing an outcome claim.",
+    "expectedSourceCodes": ["T-002"]
+  },
+  {
+    "id": "ai-powered-claim",
+    "title": "Evaluation: AI control language",
+    "channel": "LinkedIn",
+    "purpose": "Explain the human review process.",
+    "content": "Our AI-powered product automatically publishes the final campaign for your team.",
+    "expectedSourceCodes": ["T-004"]
+  },
+  {
+    "id": "clean-copy",
+    "title": "Evaluation: clean approved copy",
+    "channel": "Blog post",
+    "purpose": "Explain how creators and managers work together.",
+    "content": "TrueMark helps creators check drafts against approved guidance before publication. A manager reviews the final version and records the decision.",
+    "expectedSourceCodes": []
+  }
+]

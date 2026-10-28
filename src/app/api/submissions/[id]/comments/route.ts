@@ -6,11 +6,12 @@ import { commentSchema } from '@/lib/validation'
 type Ctx = { params: { id: string } }
 
 export const POST = withAuth<Ctx>(null, async (req: NextRequest, session, { params }) => {
+  if (!session.workspaceId || session.role === 'SUPER_ADMIN') return NextResponse.json({ error: 'This account is not assigned to a brand workspace.' }, { status: 403 })
   const parsed = await parseJsonBody(req, commentSchema)
   if (!parsed.ok) return parsed.response
 
   const submission = await db.submission.findUnique({
-    where: { id: params.id },
+    where: { id: params.id, workspaceId: session.workspaceId },
     select: { id: true, creatorId: true },
   })
   if (!submission) {

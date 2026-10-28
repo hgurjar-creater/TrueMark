@@ -15,80 +15,181 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String     @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String     @unique
   passwordHash String
-  role         String   @default("CREATOR") // ADMIN | MANAGER | CREATOR
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         String     @default("CREATOR") // SUPER_ADMIN | ADMIN | MANAGER | CREATOR
+  workspaceId  String?
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   submissions Submission[]
   versions    Version[]
   comments    Comment[]
   auditLogs   AuditLog[]
-  findings    Finding[]    @relation("FindingDecidedBy")
+  findings    Finding[]         @relation("FindingDecidedBy")
+  feedback    ProductFeedback[]
+
+  @@index([workspaceId, role])
+}
+
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  users       User[]
+  profile     BrandProfile?
+  rules       Rule[]
+  facts       Fact[]
+  terms       Term[]
+  submissions Submission[]
+  feedback    ProductFeedback[]
+}
+
+// One brand profile per deployed workspace in the MVP. Assets stay in the
+// database, behind authenticated routes, instead of being published under /public.
+model BrandProfile {
+  id           String     @id @default(cuid())
+  workspaceId  String?    @unique
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id])
+  name         String     @default("TrueMark Demo")
+  palette      String     @default("[]") // JSON array of approved HEX swatches
+  logoData     String? // base64-encoded image bytes
+  logoMimeType String?
+  logoFileName String?
+  updatedAt    DateTime   @updatedAt
+}
+
+// Repeatedly dismissed guidance is surfaced for an administrator to clarify;
+// the draft is kept separate from the approved rule until a person reviews it.
+model GuidelineInsight {
+  id                 String   @id @default(cuid())
+  sourceKey          String   @unique
+  sourceType         String
+  sourceId           String
+  sourceCode         String
+  sourceTitle        String
+  sourceText         String
+  decisionCount      Int
+  dismissalRate      Float
+  sampleNotes        String
+  clarificationDraft String
+  status             String   @default("DRAFT") // DRAFT | REVIEWED
+  updatedAt          DateTime @updatedAt
 }
 
 // An approved rule the review pipeline may cite (e.g. R-001).
 model Rule {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  title     String
-  text      String
-  category  String?
-  approved  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String     @id @default(cuid())
+  code        String
+  title       String
+  text        String
+  category    String?
+  approved    Boolean    @default(false)
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   findings Finding[]
+
+  @@unique([workspaceId, code])
+  @@index([workspaceId, approved])
 }
 
 // An approved fact with a source and optional expiry (e.g. F-001).
 model Fact {
-  id        String    @id @default(cuid())
-  code      String    @unique
-  statement String
-  source    String
-  expiresAt DateTime?
-  approved  Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String     @id @default(cuid())
+  code        String
+  statement   String
+  source      String
+  expiresAt   DateTime?
+  approved    Boolean    @default(false)
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   findings Finding[]
+
+  @@unique([workspaceId, code])
+  @@index([workspaceId, approved])
 }
 
 // A preferred or banned term with a reason (e.g. T-001).
 model Term {
-  id          String   @id @default(cuid())
-  code        String   @unique
+  id          String     @id @default(cuid())
+  code        String
   value       String
   status      String // PREFERRED | BANNED
   replacement String?
   reason      String
-  approved    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  approved    Boolean    @default(false)
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   findings Finding[]
+
+  @@unique([workspaceId, code])
+  @@index([workspaceId, approved])
 }
 
 model Submission {
-  id        String   @id @default(cuid())
-  title     String
-  content   String
-  channel   String
-  purpose   String
-  status    String   @default("IN_REVIEW") // IN_REVIEW | CHANGES_REQUESTED | APPROVED | PUBLISHED
-  creatorId String
-  creator   User     @relation(fields: [creatorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String     @id @default(cuid())
+  title               String
+  content             String
+  channel             String
+  purpose             String
+  confidentialSpans   String? // JSON offsets; the original stays private in storage, spans are masked for external AI calls
+  imageData           String? // base64-encoded creative, private to authenticated submission views
+  imageStorageKey     String? // private filesystem/S3 object key for new optimized creatives
+  imageMimeType       String?
+  imageName           String?
+  imageByteSize       Int?
+  imageAltText        String?
+  visualReview        String? // JSON report for the reviewed image
+  accessibilityReview String? // JSON text accessibility report
+  reviewStatus        String     @default("COMPLETED") // PENDING | PROCESSING | COMPLETED | FAILED
+  status              String     @default("IN_REVIEW") // IN_REVIEW | CHANGES_REQUESTED | APPROVED | PUBLISHED
+  creatorId           String
+  creator             User       @relation(fields: [creatorId], references: [id])
+  workspaceId         String?
+  workspace           Workspace? @relation(fields: [workspaceId], references: [id])
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
   versions Version[]
   findings Finding[]
   comments Comment[]
   aiLogs   AiCallLog[]
+  feedback ProductFeedback[]
+  reviewJob ReviewJob?
+
+  @@index([workspaceId, status, updatedAt])
+  @@index([workspaceId, creatorId, updatedAt])
+  @@index([workspaceId, reviewStatus, updatedAt])
+}
+
+model ReviewJob {
+  id           String     @id @default(cuid())
+  submissionId String     @unique
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  status       String     @default("QUEUED") // QUEUED | RUNNING | COMPLETED | FAILED
+  attempts     Int        @default(0)
+  availableAt  DateTime   @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  error        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([status, availableAt])
+  @@index([status, updatedAt])
 }
 
 // Version 1 is the original submission; each accepted change creates the next.
@@ -136,6 +237,9 @@ model Finding {
   decisionNote    String?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+
+  @@index([submissionId, reviewedVersion])
+  @@index([submissionId, status])
 }
 
 model Comment {
@@ -157,6 +261,8 @@ model AuditLog {
   entityId   String?
   metadata   String?
   createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
 }
 
 // Disclosure requirement: every external AI call is logged and inspectable.
@@ -169,4 +275,20 @@ model AiCallLog {
   ok           Boolean
   error        String?
   createdAt    DateTime    @default(now())
+
+  @@index([submissionId, createdAt])
+}
+
+model ProductFeedback {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  submissionId String?
+  submission   Submission? @relation(fields: [submissionId], references: [id])
+  helpfulness  Int
+  category     String
+  comment      String?
+  createdAt    DateTime    @default(now())
+  workspaceId  String?
+  workspace    Workspace?  @relation(fields: [workspaceId], references: [id])
 }

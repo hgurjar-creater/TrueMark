@@ -3,7 +3,7 @@ import { z } from 'zod'
 // SQLite has no Prisma enums, so every role/status stored as a String column is
 // validated through these constants. Keep them in sync with prisma/schema.prisma.
 
-export const ROLES = ['ADMIN', 'MANAGER', 'CREATOR'] as const
+export const ROLES = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'CREATOR'] as const
 export type Role = (typeof ROLES)[number]
 
 export const SUBMISSION_STATUSES = ['IN_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED'] as const
@@ -32,11 +32,13 @@ export const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters.').max(80, 'Name must be at most 80 characters.'),
   email: z.string().trim().toLowerCase().email('Enter a valid email address.').max(160),
   password: z.string().min(8, 'Password must be at least 8 characters.').max(72, 'Password must be at most 72 characters.'),
+  setupSecret: z.string().min(16, 'Enter the one-time Super Admin setup code.').max(200),
 })
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address.').max(160),
   password: z.string().min(1, 'Enter your password.').max(72),
+  expectedRole: z.enum(ROLES).optional(),
 })
 
 export type RegisterInput = z.infer<typeof registerSchema>
@@ -59,7 +61,21 @@ export const submissionSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters.').max(120),
   channel: z.enum(CHANNELS),
   purpose: z.string().trim().min(3, 'Describe the purpose of the piece.').max(500),
-  content: z.string().trim().min(20, 'The draft must be at least 20 characters.').max(20000),
+  content: z.string().min(20, 'The draft must be at least 20 characters.').max(20000),
+  confidentialSpans: z.array(z.object({ start: z.number().int().nonnegative(), end: z.number().int().positive() })).max(20).optional(),
+}).superRefine((data, ctx) => {
+  if (data.content.trim().length < 20) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'The draft must be at least 20 non-space characters.', path: ['content'] })
+  }
+  const spans = [...(data.confidentialSpans ?? [])].sort((a, b) => a.start - b.start)
+  spans.forEach((span, index) => {
+    if (span.end <= span.start || span.end > data.content.length) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A confidential selection is outside the draft.', path: ['confidentialSpans', index] })
+    }
+    if (index > 0 && span.start < spans[index - 1].end) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Confidential selections cannot overlap.', path: ['confidentialSpans', index] })
+    }
+  })
 })
 
 export const decisionSchema = z

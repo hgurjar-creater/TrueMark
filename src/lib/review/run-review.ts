@@ -1,13 +1,23 @@
 import { db } from '../db'
+import { geminiReview } from '@backend/review/gemini'
 import { checkTerms } from './deterministic'
 import { mockReview } from './mock'
 import { verifyFindings, type ApprovedLibrary } from './verify'
 import type { FindingDraft } from './types'
 
-// Values recorded in AiCallLog for disclosure. The Gemini provider (Phase 3)
-// replaces these behind the same contract — callers never change.
-export const REVIEW_PROVIDER = 'mock'
-export const REVIEW_MODEL = 'deterministic-rules-v1'
+export interface ReviewCall {
+  provider: 'gemini' | 'mock'
+  model: string
+  ok: boolean
+  error?: string
+}
+
+export interface ReviewResult {
+  drafts: FindingDraft[]
+  calls: ReviewCall[]
+}
+
+const MOCK_MODEL = 'deterministic-rules-v1'
 
 function dedupe(drafts: FindingDraft[]): FindingDraft[] {
   const seen = new Set<string>()
@@ -19,15 +29,20 @@ function dedupe(drafts: FindingDraft[]): FindingDraft[] {
   })
 }
 
-// Round 2 review path: deterministic term checks plus the offline mock
-// provider over the approved library. Every result is verified — a finding
-// that cannot cite a known approved source with a verbatim span is dropped
-// here and never reaches storage or the interface.
-export async function runReview(content: string): Promise<FindingDraft[]> {
+function safeError(error: unknown): string {
+  const message = error instanceof Error ? error.message : 'Gemini request failed.'
+  const apiKey = process.env.GEMINI_API_KEY?.trim()
+  return (apiKey ? message.replaceAll(apiKey, '[redacted]') : message).slice(0, 240)
+}
+
+// Deterministic term checks always run. Gemini receives only the draft and a
+// small set of retrieved approved sources; if the provider is unavailable,
+// the offline mock keeps submission review working end to end.
+export async function runReview(content: string, externalContent = content, workspaceId = 'truemark-demo'): Promise<ReviewResult> {
   const [rules, facts, terms] = await Promise.all([
-    db.rule.findMany({ where: { approved: true } }),
-    db.fact.findMany({ where: { approved: true } }),
-    db.term.findMany({ where: { approved: true } }),
+    db.rule.findMany({ where: { approved: true, workspaceId } }),
+    db.fact.findMany({ where: { approved: true, workspaceId } }),
+    db.term.findMany({ where: { approved: true, workspaceId } }),
   ])
 
   const library: ApprovedLibrary = {
@@ -36,6 +51,27 @@ export async function runReview(content: string): Promise<FindingDraft[]> {
     terms: new Map(terms.map((term) => [term.id, term])),
   }
 
-  const drafts = dedupe([...checkTerms(content, terms), ...mockReview(content, rules, facts)])
-  return verifyFindings(drafts, content, library)
+  const deterministicFindings = checkTerms(content, terms)
+  const calls: ReviewCall[] = []
+  let providerFindings: FindingDraft[]
+
+  if (process.env.GEMINI_API_KEY?.trim()) {
+    const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.6-flash'
+    try {
+      providerFindings = await geminiReview(externalContent, rules, facts, workspaceId)
+      calls.push({ provider: 'gemini', model, ok: true })
+    } catch (error) {
+      calls.push({ provider: 'gemini', model, ok: false, error: safeError(error) })
+      providerFindings = mockReview(content, rules, facts, workspaceId)
+      calls.push({ provider: 'mock', model: MOCK_MODEL, ok: true })
+    }
+  } else {
+    providerFindings = mockReview(content, rules, facts, workspaceId)
+    calls.push({ provider: 'mock', model: MOCK_MODEL, ok: true })
+  }
+
+  return {
+    drafts: verifyFindings(dedupe([...deterministicFindings, ...providerFindings]), content, library),
+    calls,
+  }
 }
