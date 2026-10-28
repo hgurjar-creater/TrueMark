@@ -3,15 +3,20 @@
 
 const { PrismaClient } = require('@prisma/client')
 const { hash } = require('bcryptjs')
+const sharp = require('sharp')
 
 const prisma = new PrismaClient()
 
-const DEMO_PASSWORD = 'truemark123'
+const DEMO_PASSWORD = 'truemark1234'
+const isProduction = process.env.NODE_ENV === 'production'
 
-const users = [
-  { email: 'admin@truemark.test', name: 'Aarti Admin', role: 'ADMIN' },
-  { email: 'manager@truemark.test', name: 'Mohan Manager', role: 'MANAGER' },
-  { email: 'creator@truemark.test', name: 'Chhaya Creator', role: 'CREATOR' },
+// On an empty deployment, the first sign-up becomes Super Admin. Local demos
+// Local demos include a Super Admin and sample Manager/Creator accounts. A
+// demo brand Admin is added only when that workspace has no Admin already.
+const demoUsers = [
+  { email: 'superadmin@truemark.test', name: 'TrueMark Super Admin', role: 'SUPER_ADMIN', password: DEMO_PASSWORD },
+  { email: 'manager@truemark.test', name: 'Mohan Manager', role: 'MANAGER', password: DEMO_PASSWORD },
+  { email: 'creator@truemark.test', name: 'Chhaya Creator', role: 'CREATOR', password: DEMO_PASSWORD },
 ]
 
 const rules = [
@@ -140,43 +145,96 @@ const terms = [
 ]
 
 async function main() {
-  const passwordHash = await hash(DEMO_PASSWORD, 12)
+  const demoWorkspace = await prisma.workspace.upsert({
+    where: { id: 'truemark-demo' }, update: { name: 'TrueMark Demo' },
+    create: { id: 'truemark-demo', name: 'TrueMark Demo' },
+  })
+  await prisma.user.updateMany({ where: { workspaceId: null, role: { not: 'SUPER_ADMIN' } }, data: { workspaceId: demoWorkspace.id } })
+
+  const users = isProduction ? [] : [...demoUsers]
+  const existingAdmin = await prisma.user.findFirst({ where: { role: 'ADMIN', workspaceId: demoWorkspace.id, email: { not: 'admin@truemark.test' } } })
+  const demoAdmin = await prisma.user.findUnique({ where: { email: 'admin@truemark.test' } })
+  if (existingAdmin && demoAdmin && existingAdmin.id !== demoAdmin.id && demoAdmin.workspaceId === demoWorkspace.id) {
+    const usage = await prisma.user.findUnique({ where: { id: demoAdmin.id }, include: { _count: { select: { submissions: true, versions: true, comments: true, findings: true, feedback: true } } } })
+    const hasProductData = usage && Object.values(usage._count).some((count) => count > 0)
+    if (hasProductData) throw new Error('The extra demo Admin has product data. Reassign it before removing the fixture account.')
+    await prisma.auditLog.updateMany({ where: { actorId: demoAdmin.id }, data: { actorId: null } })
+    await prisma.user.delete({ where: { id: demoAdmin.id } })
+  }
+  if (!isProduction && !existingAdmin) {
+    users.push({ email: 'admin@truemark.test', name: 'TrueMark Brand Admin', role: 'ADMIN', password: DEMO_PASSWORD })
+  }
 
   for (const user of users) {
+    const passwordHash = await hash(user.password, 12)
     await prisma.user.upsert({
       where: { email: user.email },
-      update: {},
-      create: { ...user, passwordHash },
+      update: { name: user.name, role: user.role, passwordHash, workspaceId: user.role === 'SUPER_ADMIN' ? null : demoWorkspace.id },
+      create: { email: user.email, name: user.name, role: user.role, passwordHash, workspaceId: user.role === 'SUPER_ADMIN' ? null : demoWorkspace.id },
     })
   }
+  await Promise.all([
+    prisma.rule.updateMany({ where: { workspaceId: null }, data: { workspaceId: demoWorkspace.id } }),
+    prisma.fact.updateMany({ where: { workspaceId: null }, data: { workspaceId: demoWorkspace.id } }),
+    prisma.term.updateMany({ where: { workspaceId: null }, data: { workspaceId: demoWorkspace.id } }),
+  ])
 
   for (const rule of rules) {
     await prisma.rule.upsert({
-      where: { code: rule.code },
+      where: { workspaceId_code: { workspaceId: demoWorkspace.id, code: rule.code } },
       update: {},
-      create: { ...rule, approved: true },
+      create: { ...rule, approved: true, workspaceId: demoWorkspace.id },
     })
   }
 
   for (const fact of facts) {
     await prisma.fact.upsert({
-      where: { code: fact.code },
+      where: { workspaceId_code: { workspaceId: demoWorkspace.id, code: fact.code } },
       update: {},
-      create: { ...fact, approved: true },
+      create: { ...fact, approved: true, workspaceId: demoWorkspace.id },
     })
   }
 
   for (const term of terms) {
     await prisma.term.upsert({
-      where: { code: term.code },
+      where: { workspaceId_code: { workspaceId: demoWorkspace.id, code: term.code } },
       update: {},
-      create: { ...term, approved: true },
+      create: { ...term, approved: true, workspaceId: demoWorkspace.id },
+    })
+  }
+  await Promise.all([
+    prisma.submission.updateMany({ where: { workspaceId: null }, data: { workspaceId: demoWorkspace.id } }),
+    prisma.productFeedback.updateMany({ where: { workspaceId: null }, data: { workspaceId: demoWorkspace.id } }),
+  ])
+
+  const demoLogoSvg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="560" height="160" viewBox="0 0 560 160"><rect width="160" height="160" rx="38" fill="#6D4AFF"/><path d="M45 83l24 24 49-55" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><text x="190" y="103" font-family="Arial,sans-serif" font-size="58" font-weight="700" fill="#211D2D">TrueMark</text></svg>')
+  const demoLogoData = (await sharp(demoLogoSvg).png().toBuffer()).toString('base64')
+  await prisma.brandProfile.upsert({
+    where: { id: 'default' },
+    update: { workspaceId: demoWorkspace.id },
+    create: {
+      id: 'default',
+      workspaceId: demoWorkspace.id,
+      name: 'TrueMark Demo',
+      palette: JSON.stringify(['#6D4AFF', '#211D2D', '#FFFFFF']),
+      logoData: demoLogoData,
+      logoMimeType: 'image/png',
+      logoFileName: 'truemark-demo-logo.png',
+    },
+  })
+  const seededProfile = await prisma.brandProfile.findUnique({ where: { id: 'default' } })
+  if (seededProfile && !seededProfile.logoData) {
+    await prisma.brandProfile.update({
+      where: { id: 'default' },
+      data: { logoData: demoLogoData, logoMimeType: 'image/png', logoFileName: 'truemark-demo-logo.png' },
     })
   }
 
   console.log('Seed complete.')
-  console.log(`Users: ${users.map((u) => `${u.email} (${u.role})`).join(', ')} — password: ${DEMO_PASSWORD}`)
+  console.log(`Users: ${users.map((u) => `${u.email} (${u.role})`).join(', ')}`)
+  if (!isProduction) console.log(`Local demo password: ${DEMO_PASSWORD}`)
   console.log(`Rules: ${rules.length}, facts: ${facts.length}, terms: ${terms.length}, all approved.`)
+  console.log('Demo brand profile: violet, charcoal and white palette; set your logo in Admin → Brand references.')
 }
 
 main()

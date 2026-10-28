@@ -12,6 +12,7 @@ export interface SessionUser {
   name: string
   email: string
   role: Role
+  workspaceId: string | null
 }
 
 export interface SessionCookieOptions {
@@ -43,7 +44,7 @@ function getSecret(): Uint8Array {
 }
 
 export async function createSessionToken(user: SessionUser): Promise<string> {
-  return new SignJWT({ name: user.name, email: user.email, role: user.role })
+  return new SignJWT({ name: user.name, email: user.email, role: user.role, workspaceId: user.workspaceId })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(user.id)
     .setIssuedAt()
@@ -63,7 +64,7 @@ export async function verifySessionToken(token: string): Promise<SessionUser | n
     ) {
       return null
     }
-    return { id: payload.sub, name: payload.name, email: payload.email, role }
+    return { id: payload.sub, name: payload.name, email: payload.email, role, workspaceId: typeof payload.workspaceId === 'string' ? payload.workspaceId : null }
   } catch (error) {
     // Invalid or expired tokens are an expected outcome; a missing or short
     // AUTH_SECRET is a configuration error and must stay visible.

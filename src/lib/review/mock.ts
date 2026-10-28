@@ -1,5 +1,6 @@
 import type { Fact, Rule } from '@prisma/client'
-import { Bm25Index, tokenize } from './retrieval'
+import { tokenize } from './retrieval'
+import { getWorkspaceIndexes } from '@backend/review/index-cache'
 import type { FindingDraft } from './types'
 
 interface Segment {
@@ -29,12 +30,13 @@ function splitSentences(content: string): Segment[] {
 // is configured, keeping the whole workflow available. It only ever cites
 // approved sources it was given and quotes verbatim spans of the draft, so the
 // verifier can check every finding it produces.
-export function mockReview(content: string, rules: Rule[], facts: Fact[]): FindingDraft[] {
+export function mockReview(content: string, rules: Rule[], facts: Fact[], workspaceId = 'truemark-demo'): FindingDraft[] {
   const drafts: FindingDraft[] = []
-  const ruleIndex = new Bm25Index(rules.map((rule) => ({ id: rule.id, text: `${rule.title} ${rule.text}` })))
-  const factIndex = new Bm25Index(facts.map((fact) => ({ id: fact.id, text: fact.statement })))
-  const ruleById = new Map(rules.map((rule) => [rule.id, rule]))
-  const factById = new Map(facts.map((fact) => [fact.id, fact]))
+  const indexes = getWorkspaceIndexes(workspaceId, rules, facts)
+  const ruleIndex = indexes.ruleIndex
+  const factIndex = indexes.factIndex
+  const ruleById = indexes.rulesById
+  const factById = indexes.factsById
 
   // How many approved rules mention each keyword — a keyword only one rule
   // uses is distinctive enough to justify a low-confidence finding on its own.

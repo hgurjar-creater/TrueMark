@@ -1,0 +1,17 @@
+{
+  "examples": 4,
+  "labelledFindings": 3,
+  "truePositives": 3,
+  "falsePositives": 1,
+  "falseNegatives": 0,
+  "precision": 0.75,
+  "recall": 1,
+  "citationValidity": 1,
+  "createdSubmissionIds": [
+    "cmvq9l2gp007bos24hrskooh3",
+    "cmvq9l7ip007oos24nkkogkpd",
+    "cmvq9l7u90081os248kohreun",
+    "cmvq9l86s008gos24k95bx9iy"
+  ],
+  "note": "This small seeded set is a demonstrator, not a statistically representative benchmark. AI-model findings may vary between runs."
+}

@@ -15,6 +15,7 @@
 
 # production
 /build
+/.data/
 
 # misc
 .DS_Store
@@ -29,6 +30,8 @@ yarn-error.log*
 .env
 .env*.local
 prisma/dev.db
+prisma/*-smoke.db
+/tmp/pdfs/
 
 # vercel
 .vercel

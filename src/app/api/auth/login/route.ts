@@ -13,7 +13,7 @@ import { loginSchema, toRole } from '@/lib/validation'
 export async function POST(req: NextRequest) {
   const parsed = await parseJsonBody(req, loginSchema)
   if (!parsed.ok) return parsed.response
-  const { email, password } = parsed.data
+  const { email, password, expectedRole } = parsed.data
 
   const user = await db.user.findUnique({ where: { email } })
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
@@ -24,7 +24,11 @@ export async function POST(req: NextRequest) {
 
   const role = toRole(user.role)
   if (!role) throw new Error(`User ${user.id} has an unknown role "${user.role}".`)
-  const sessionUser: SessionUser = { id: user.id, name: user.name, email: user.email, role }
+  if (expectedRole && expectedRole !== role) {
+    await writeAudit('USER_LOGIN_FAILED', 'User', { metadata: { email, expectedRole } })
+    return NextResponse.json({ error: 'Incorrect email, password, or portal.' }, { status: 401 })
+  }
+  const sessionUser: SessionUser = { id: user.id, name: user.name, email: user.email, role, workspaceId: user.workspaceId }
 
   const token = await createSessionToken(sessionUser)
   await writeAudit('USER_LOGIN', 'User', { actorId: user.id, entityId: user.id })

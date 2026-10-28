@@ -14,12 +14,16 @@ export async function middleware(req: NextRequest) {
   }
 
   if (req.nextUrl.pathname.startsWith('/admin') && session.role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    return NextResponse.redirect(new URL(session.role === 'SUPER_ADMIN' ? '/superadmin' : '/dashboard', req.url))
+  }
+
+  if (req.nextUrl.pathname.startsWith('/superadmin') && session.role !== 'SUPER_ADMIN') {
+    return NextResponse.redirect(new URL(session.role === 'ADMIN' ? '/admin' : '/dashboard', req.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/superadmin/:path*'],
 }
