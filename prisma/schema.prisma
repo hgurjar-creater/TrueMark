@@ -1,17 +1,16 @@
 // TrueMark — Prepublication Brand Governance
-// Prisma 5, SQLite for local development, PostgreSQL for hosted deployment.
-// NOTE: SQLite does not support Prisma enums, so role/status fields are String
-// columns validated with zod in src/lib/validation.ts. This schema is valid on
-// Postgres without changes; switch to enums there only if you want DB-level
-// constraints as well.
+// Prisma 5 with PostgreSQL for local development and hosted deployment.
+// Role/status fields remain String columns and are validated with zod in
+// src/lib/validation.ts.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {
