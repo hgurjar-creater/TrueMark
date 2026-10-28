@@ -34,14 +34,14 @@ export function LibraryImporter() {
       const form = new FormData()
       form.append('file', file)
       const res = await fetch('/api/admin/library/import', { method: 'POST', body: form })
-      const data = (await res.json()) as {
+      const data = (await res.json().catch(() => null)) as {
         fileName?: string
         provider?: string
         candidates?: Candidates
         error?: string
-      }
-      if (!res.ok || !data.candidates) {
-        setError(data.error ?? 'Could not read the file.')
+      } | null
+      if (!res.ok || !data?.candidates) {
+        setError(data?.error ?? `Could not read the file (HTTP ${res.status}).`)
         return
       }
       setFileName(data.fileName ?? file.name)

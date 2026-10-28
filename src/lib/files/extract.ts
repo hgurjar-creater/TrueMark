@@ -1,5 +1,4 @@
 import mammoth from 'mammoth'
-import { PDFParse } from 'pdf-parse'
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
@@ -46,6 +45,16 @@ export async function extractText(fileName: string, buffer: Buffer): Promise<Ext
     text = result.value
   } else if (ext === 'pdf') {
     kind = 'pdf'
+    // Load PDF.js only for PDFs. Its Node build needs the canvas globals that
+    // pdf-parse otherwise tries to discover through an optional dynamic require.
+    // Explicitly importing the native adapter also makes Vercel include it in
+    // the function trace; TXT and DOCX uploads never load this dependency.
+    const canvas = await import('@napi-rs/canvas')
+    const globals = globalThis as unknown as Record<string, unknown>
+    globals.DOMMatrix ??= canvas.DOMMatrix
+    globals.ImageData ??= canvas.ImageData
+    globals.Path2D ??= canvas.Path2D
+    const { PDFParse } = await import('pdf-parse')
     const parser = new PDFParse({ data: buffer })
     try {
       const parsed = await parser.getText()

@@ -2,7 +2,7 @@
 const nextConfig = {
   // These packages use native/runtime resources and are loaded by server routes.
   experimental: {
-    serverComponentsExternalPackages: ['mammoth', 'pdf-parse', 'sharp'],
+    serverComponentsExternalPackages: ['mammoth', 'pdf-parse', 'sharp', '@napi-rs/canvas'],
   },
 };
 
