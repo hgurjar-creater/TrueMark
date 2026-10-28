@@ -12,12 +12,16 @@ function formatDateTime(date: Date): string {
 export default async function SubmissionsPage() {
   const session = await getSession()
   if (!session) redirect('/login')
+  if (!session.workspaceId) redirect('/login')
 
   const isCreator = session.role === 'CREATOR'
   const submissions = await db.submission.findMany({
-    where: isCreator ? { creatorId: session.id } : {},
+    where: { workspaceId: session.workspaceId, ...(isCreator ? { creatorId: session.id } : {}) },
     orderBy: { updatedAt: 'desc' },
-    include: { creator: { select: { name: true } } },
+    select: {
+      id: true, title: true, channel: true, status: true, updatedAt: true,
+      creator: { select: { name: true } },
+    },
   })
 
   return (

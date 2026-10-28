@@ -10,24 +10,31 @@ export function AppShell({
   children,
 }: {
   session: SessionUser
-  active?: 'submissions'
+  active?: 'dashboard' | 'submissions'
   children: React.ReactNode
 }) {
+  const navClass = (isActive: boolean) =>
+    isActive
+      ? 'rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-800'
+      : 'rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900'
+
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-          <div className="flex items-center gap-6">
+      <header className="site-glass-nav border-b border-slate-200">
+        <div className="mx-auto flex min-h-16 w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-2 sm:px-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <Link href="/dashboard">
               <Logo />
             </Link>
             <Link
+              href="/dashboard"
+              className={navClass(active === 'dashboard')}
+            >
+              Overview
+            </Link>
+            <Link
               href="/submissions"
-              className={
-                active === 'submissions'
-                  ? 'text-sm font-semibold text-slate-900'
-                  : 'text-sm font-medium text-slate-600 hover:text-slate-900'
-              }
+              className={navClass(active === 'submissions')}
             >
               Submissions
             </Link>
@@ -37,8 +44,8 @@ export function AppShell({
               </Link>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600">{session.name}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden text-sm text-slate-600 sm:inline">{session.name}</span>
             <RoleBadge role={session.role} />
             <LogoutButton />
           </div>
