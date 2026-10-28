@@ -9,13 +9,18 @@ export function ReviewProcessingStatus({ submissionId, initialStatus }: { submis
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (status === 'COMPLETED') return
+    if (initialStatus === 'COMPLETED' || initialStatus === 'FAILED') return
     let active = true
     let refreshing = false
+    let timer: number | undefined
+    let delay = 2000
     const check = async () => {
       try {
         const response = await fetch(`/api/submissions/${submissionId}/review-status`, { cache: 'no-store' })
-        if (!response.ok) return
+        if (!response.ok) {
+          scheduleNext()
+          return
+        }
         const result = await response.json() as { status: string; error?: string | null }
         if (!active) return
         setStatus(result.status)
@@ -23,21 +28,25 @@ export function ReviewProcessingStatus({ submissionId, initialStatus }: { submis
         if (result.status === 'COMPLETED' && !refreshing) {
           refreshing = true
           router.refresh()
+          return
         }
+        if (result.status === 'FAILED') return
       } catch {
         // A transient poll failure should not interrupt the review screen.
       }
+      scheduleNext()
+    }
+    const scheduleNext = () => {
+      if (!active) return
+      timer = window.setTimeout(check, delay)
+      delay = Math.min(Math.round(delay * 1.5), 10_000)
     }
     void check()
-    if (status === 'FAILED') {
-      return () => { active = false }
-    }
-    const timer = window.setInterval(check, 1800)
     return () => {
       active = false
-      window.clearInterval(timer)
+      if (timer) window.clearTimeout(timer)
     }
-  }, [router, status, submissionId])
+  }, [initialStatus, router, submissionId])
 
   if (status === 'COMPLETED') return null
   if (status === 'FAILED') {

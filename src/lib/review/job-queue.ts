@@ -40,10 +40,10 @@ export async function recoverStaleReviewJobs() {
   })
 }
 
-export async function claimNextReviewJob(): Promise<string | null> {
+export async function claimNextReviewJob(submissionId?: string): Promise<string | null> {
   const now = new Date()
   const candidates = await db.reviewJob.findMany({
-    where: { status: 'QUEUED', availableAt: { lte: now } },
+    where: { status: 'QUEUED', availableAt: { lte: now }, ...(submissionId ? { submissionId } : {}) },
     orderBy: { createdAt: 'asc' },
     take: 5,
     select: { id: true },
@@ -57,6 +57,23 @@ export async function claimNextReviewJob(): Promise<string | null> {
     if (claimed.count === 1) return candidate.id
   }
   return null
+}
+
+// Vercel serverless requests dispatch one queued review instead of relying on
+// a permanently running worker process. Atomic claiming keeps concurrent
+// status polls from processing the same submission twice.
+export async function processQueuedReviewJob(submissionId: string) {
+  try {
+    const staleBefore = new Date(Date.now() - 2 * 60_000)
+    await db.reviewJob.updateMany({
+      where: { submissionId, status: 'RUNNING', updatedAt: { lt: staleBefore } },
+      data: { status: 'QUEUED', availableAt: new Date(), error: 'Recovered after a timed-out review.' },
+    })
+    const jobId = await claimNextReviewJob(submissionId)
+    if (jobId) await processReviewJob(jobId)
+  } catch (error) {
+    console.error('[review-worker] Could not dispatch queued review:', error instanceof Error ? error.message : 'Unknown error')
+  }
 }
 
 export async function processReviewJob(jobId: string) {

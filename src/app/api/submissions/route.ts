@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { db } from '@/lib/db'
 import { parseJsonBody, withAuth, writeAudit } from '@/lib/api'
 import { submissionSchema } from '@/lib/validation'
 import type { FindingDraft } from '@/lib/review/types'
+import { processQueuedReviewJob } from '@/lib/review/job-queue'
 import { checkTerms } from '@/lib/review/deterministic'
 import { auditAccessibility } from '@/lib/review/accessibility'
 import sharp from 'sharp'
@@ -10,7 +12,7 @@ import { ACCEPTED_IMAGE_TYPES, MAX_BRAND_IMAGE_BYTES } from '@backend/review/vis
 import { deletePrivateAsset, newCreativeKey, storePrivateAsset } from '@/lib/files/private-assets'
 import { workspaceIdOrError } from '@/lib/workspace'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 async function submissionInput(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('multipart/form-data')) {
@@ -140,6 +142,8 @@ export const POST = withAuth(['ADMIN', 'MANAGER', 'CREATOR'], async (req: NextRe
     entityId: submission.id,
     metadata: { hasImage: Boolean(parsed.image) },
   })
+
+  waitUntil(processQueuedReviewJob(submission.id))
 
   return NextResponse.json({ id: submission.id, findings: immediateFindings.length, reviewStatus: 'PENDING' }, { status: 201 })
 })
