@@ -4,6 +4,18 @@ TrueMark is a prepublication brand-governance workspace. It checks copy and crea
 
 Built by Team Harshitgurjar00007 for the hackathon.
 
+## Judge access to the deployed demo
+
+Open [https://true-mark-six.vercel.app](https://true-mark-six.vercel.app), choose a portal, and sign in with one of these **deployed** demo accounts:
+
+| Portal | Email | Password |
+| --- | --- | --- |
+| Admin | `judge-admin@truemark.test` | `JudgeAdmin-TM26!` |
+| Manager | `judge-manager@truemark.test` | `JudgeManager-TM26!` |
+| Creator | `judge-creator@truemark.test` | `JudgeCreator-TM26!` |
+
+These accounts belong to the isolated **TrueMark Judge Demo** workspace, which includes approved sample guidance for trying the review flow. They are separate from local seed accounts and have no access to other brand workspaces or the platform Super Admin. This is a public demo: do not enter confidential or real customer information.
+
 ## Run the demo locally
 
 ```bash
@@ -17,7 +29,9 @@ Open `http://localhost:3000`. On an empty database, the first account becomes Su
 
 On a fresh production database, set `SUPER_ADMIN_SETUP_SECRET` to a long one-time code and give it only to the person creating the initial Super Admin. Remove the variable after setup. Without that configured code, public Super Admin registration stays closed.
 
-Local seeded accounts:
+### Local development accounts only
+
+The following accounts are created by `npm run db:seed` in a local development database. **They do not sign in to the deployed site; use the Judge access accounts above for the live demo.**
 
 | Email | Role | Password |
 | --- | --- | --- |
@@ -31,7 +45,8 @@ The seed includes a TrueMark Demo brand, approved demo rules, facts, terms, a sa
 
 Copy `.env.example` to `.env` and set:
 
-- `DATABASE_URL` — `file:./dev.db` for the currently configured SQLite schema. A hosted PostgreSQL deployment needs a PostgreSQL Prisma datasource migration before launch.
+- `DATABASE_URL` — PostgreSQL connection string (pooled on hosted deployments).
+- `DATABASE_URL_UNPOOLED` — direct PostgreSQL connection string used by Prisma for migrations.
 - `AUTH_SECRET` — random value of at least 32 characters.
 - `SUPER_ADMIN_SETUP_SECRET` — one-time production bootstrap code for the first Super Admin; remove it after setup.
 - `GEMINI_API_KEY` — optional. Without it, text review uses the deterministic mock provider and image review still measures image dimensions and sampled colors locally.
@@ -54,7 +69,7 @@ Copy `.env.example` to `.env` and set:
 flowchart LR
   C[Creator] --> UI[Next.js App Router]
   UI --> API[Authenticated route handlers]
-  API --> DB[(Prisma / SQLite or PostgreSQL)]
+  API --> DB[(Prisma / PostgreSQL)]
   API --> LOCAL[Deterministic term and accessibility checks]
   API --> RET[BM25 retrieval of approved rules and facts]
   RET --> AI[Gemini when configured]
@@ -72,7 +87,7 @@ The database supports multiple workspaces per deployment. Server-side role check
 | --- | --- | --- |
 | Web app | Next.js 14 App Router, React 18, TypeScript, Tailwind CSS | One deployable app for Super Admin, brand Admin, Manager and Creator workflows. |
 | API | Next.js Node.js route handlers | Keeps UI and authenticated server actions in one product. |
-| Persistence | Prisma 5; SQLite in the current schema | Low-friction local setup. Convert the Prisma datasource and migrate data before hosted PostgreSQL deployment. |
+| Persistence | Prisma 5 with PostgreSQL | A hosted relational database stores users, workspace guidance, submissions, findings and audit records. |
 | Authentication | bcryptjs password hashes, jose-signed JWT in an HTTP-only cookie | Passwords are not stored in plaintext; role authorization is enforced server-side. |
 | Validation | Zod for request bodies and model outputs | Rejects invalid inputs and malformed AI responses. |
 | Text retrieval | BM25 in TypeScript over approved rules/facts; no hosted vector database | Small, inspectable retrieval path with no extra data service. |
