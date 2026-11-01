@@ -8,6 +8,22 @@ import { LoginForm } from '@/components/login-form'
 // The server decides whether the workspace still needs its bootstrap Admin, so
 // the "Create it" link only appears while sign-up is genuinely open.
 
+// Per the event organisers, judge-facing demo credentials are shown on the
+// sign-in page itself so the product can be tested without any setup.
+const JUDGE_DEMO_ACCOUNTS: Record<string, { email: string; password: string } | null> = {
+  SUPER_ADMIN: null,
+  ADMIN: { email: 'judge-admin@truemark.test', password: 'JudgeAdmin-TM26!' },
+  MANAGER: { email: 'judge-manager@truemark.test', password: 'JudgeManager-TM26!' },
+  CREATOR: { email: 'judge-creator@truemark.test', password: 'JudgeCreator-TM26!' },
+}
+
+const LOCAL_DEMO_ACCOUNTS: Record<string, { email: string; password: string } | null> = {
+  SUPER_ADMIN: { email: 'superadmin@truemark.test', password: 'truemark1234' },
+  ADMIN: { email: 'admin@truemark.test', password: 'truemark1234' },
+  MANAGER: { email: 'manager@truemark.test', password: 'truemark1234' },
+  CREATOR: { email: 'creator@truemark.test', password: 'truemark1234' },
+}
+
 const ROLE_CARDS = [
   { role: 'SUPER_ADMIN', label: 'Super Admin', description: 'Create brand workspaces, provision brand Admins and review product feedback.' },
   { role: 'ADMIN', label: 'Admin', description: 'Manage one brand’s guidance and create its Manager or Creator accounts.' },
@@ -35,6 +51,9 @@ export default async function LoginPage({
   if (session) redirect(session.role === 'SUPER_ADMIN' ? '/superadmin' : session.role === 'ADMIN' ? '/admin' : '/dashboard')
 
   const registrationOpen = (await db.user.count()) === 0 && Boolean(process.env.SUPER_ADMIN_SETUP_SECRET)
+
+  const isProduction = process.env.NODE_ENV === 'production'
+  const demoAccounts = isProduction ? JUDGE_DEMO_ACCOUNTS : LOCAL_DEMO_ACCOUNTS
   const nextParam = searchParams?.next && searchParams.next.startsWith('/') && !searchParams.next.startsWith('//') ? searchParams.next : null
 
   return (
@@ -51,7 +70,7 @@ export default async function LoginPage({
           if (role) {
             return (
               <div className="w-full max-w-md">
-                <LoginForm registrationOpen={registrationOpen} requestedRole={role} />
+                <LoginForm registrationOpen={registrationOpen} requestedRole={role} demoAccount={demoAccounts[role] ?? null} />
               </div>
             )
           }
@@ -77,6 +96,30 @@ export default async function LoginPage({
                     <span className="mt-3 inline-flex text-xs font-semibold text-violet-700">Continue to {card.label} sign in →</span>
                   </Link>
                 ))}
+              </div>
+              <div className="mt-6 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-xs leading-5 text-violet-900">
+                <p className="font-semibold">Demo accounts for testing</p>
+                <ul className="mt-2 space-y-1">
+                  {ROLE_CARDS.map((card) => {
+                    const account = demoAccounts[card.role]
+                    return (
+                      <li key={card.role}>
+                        {account ? (
+                          <>
+                            <span className="font-semibold">{card.label}:</span>{' '}
+                            <span className="font-mono">{account.email}</span>{' '}
+                            / <span className="font-mono">{account.password}</span>
+                          </>
+                        ) : (
+                          <span className="text-violet-700/70">{card.label}: contact TrueMark for Super Admin access.</span>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+                <p className="mt-2 text-[11px] text-violet-700/80">
+                  Public demo — click a portal above, then use these credentials (or the fill button on the form). Do not enter confidential or real customer information.
+                </p>
               </div>
             </div>
           )

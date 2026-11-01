@@ -20,12 +20,19 @@ const homeByRole: Record<Role, string> = {
   CREATOR: '/dashboard',
 }
 
+export interface DemoAccount {
+  email: string
+  password: string
+}
+
 export function LoginForm({
   registrationOpen,
   requestedRole,
+  demoAccount,
 }: {
   registrationOpen: boolean
   requestedRole?: string
+  demoAccount?: DemoAccount | null
 }) {
   const router = useRouter()
   const expectedRole =
@@ -36,6 +43,13 @@ export function LoginForm({
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+
+  function fillDemoAccount() {
+    if (!demoAccount) return
+    setEmail(demoAccount.email)
+    setPassword(demoAccount.password)
+    setError(null)
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -107,6 +121,21 @@ export function LoginForm({
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
               {error}
             </p>
+          )}
+
+          {demoAccount && (
+            <div className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2.5 text-xs text-violet-900">
+              <p className="font-semibold">Demo account for this portal</p>
+              <p className="mt-0.5 break-all">{demoAccount.email}</p>
+              <p className="mt-0.5 break-all font-mono">{demoAccount.password}</p>
+              <button
+                type="button"
+                onClick={fillDemoAccount}
+                className="mt-2 rounded-md bg-violet-600 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-violet-500"
+              >
+                Fill demo credentials
+              </button>
+            </div>
           )}
 
           <button
