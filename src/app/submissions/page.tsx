@@ -4,19 +4,32 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
 import { AppShell } from '@/components/app-shell'
 import { StatusChip } from '@/components/status-chip'
+import { CHANNELS } from '@/lib/validation'
 
 function formatDateTime(date: Date): string {
   return date.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-export default async function SubmissionsPage() {
+export default async function SubmissionsPage({
+  searchParams,
+}: {
+  searchParams?: { channel?: string }
+}) {
   const session = await getSession()
   if (!session) redirect('/login')
   if (!session.workspaceId) redirect('/login')
 
   const isCreator = session.role === 'CREATOR'
+  const activeChannel =
+    searchParams?.channel && (CHANNELS as readonly string[]).includes(searchParams.channel)
+      ? searchParams.channel
+      : null
   const submissions = await db.submission.findMany({
-    where: { workspaceId: session.workspaceId, ...(isCreator ? { creatorId: session.id } : {}) },
+    where: {
+      workspaceId: session.workspaceId,
+      ...(isCreator ? { creatorId: session.id } : {}),
+      ...(activeChannel ? { channel: activeChannel } : {}),
+    },
     orderBy: { updatedAt: 'desc' },
     select: {
       id: true, title: true, channel: true, status: true, updatedAt: true,
@@ -42,6 +55,27 @@ export default async function SubmissionsPage() {
           >
             New submission
           </Link>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Filter by channel:</span>
+          {['All', ...CHANNELS].map((label) => {
+            const href = label === 'All' ? '/submissions' : `/submissions?channel=${encodeURIComponent(label)}`
+            const isActive = label === 'All' ? !activeChannel : activeChannel === label
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'border border-slate-300 bg-white text-slate-600 hover:border-violet-300 hover:text-violet-700'
+                }`}
+              >
+                {label}
+              </Link>
+            )
+          })}
         </div>
 
         {submissions.length === 0 ? (

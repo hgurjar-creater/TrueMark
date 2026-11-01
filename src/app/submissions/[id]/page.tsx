@@ -10,6 +10,8 @@ import { CommentForm } from '@/components/comment-form'
 import { ApprovalActions } from '@/components/approval-actions'
 import type { VisualReport } from '@backend/review/visual'
 import type { AccessibilityReport } from '@/lib/review/accessibility'
+import { computeAccessibilityScore } from '@/lib/review/accessibility-score'
+import { DraftEditor } from '@/components/draft-editor'
 import { ReviewFeedback } from '@/components/review-feedback'
 import { ReviewProcessingStatus } from '@/components/review-processing-status'
 
@@ -56,6 +58,23 @@ export default async function SubmissionPage({ params }: { params: { id: string 
     ? JSON.parse(submission.accessibilityReview) as AccessibilityReport
     : null
   const openCount = submission.findings.filter((finding) => finding.status === 'OPEN').length
+
+  // Round 3: live accessibility score — recomputed from the latest version and
+  // current finding decisions, so it moves when findings are resolved.
+  const accessibilityScore = computeAccessibilityScore({
+    content: latestVersion.content,
+    hasImage: Boolean(submission.imageStorageKey || submission.imageData),
+    altText: submission.imageAltText,
+    findings: submission.findings.map((finding) => ({ sourceType: finding.sourceType, status: finding.status })),
+  })
+  const scoreTone =
+    accessibilityScore.score >= 80 ? 'text-emerald-600' : accessibilityScore.score >= 50 ? 'text-amber-600' : 'text-rose-600'
+  const scoreBadge =
+    accessibilityScore.score >= 80
+      ? 'bg-emerald-50 text-emerald-700'
+      : accessibilityScore.score >= 50
+        ? 'bg-amber-50 text-amber-700'
+        : 'bg-rose-50 text-rose-700'
 
   const findings: FindingCardData[] = submission.findings.map((finding) => ({
     id: finding.id,
@@ -114,12 +133,41 @@ export default async function SubmissionPage({ params }: { params: { id: string 
         <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
           <section className="space-y-6">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.13em] text-sky-700">Inclusive content</p>
+                  <h2 className="mt-1 text-base font-semibold text-slate-900">Accessibility score</h2>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${scoreBadge}`}>
+                  {accessibilityScore.score}/100
+                </span>
+              </div>
+              <p className={`mt-3 text-4xl font-bold ${scoreTone}`}>{accessibilityScore.score}<span className="text-lg font-medium text-slate-400">/100</span></p>
+              <ul className="mt-4 space-y-2">
+                {accessibilityScore.components.map((component) => (
+                  <li key={component.label} className="flex items-start justify-between gap-3 text-sm">
+                    <span className="text-slate-600">
+                      {component.label}
+                      <span className="block text-xs leading-5 text-slate-400">{component.detail}</span>
+                    </span>
+                    <span className="whitespace-nowrap font-medium text-slate-700">{component.points}/{component.max}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs text-slate-400">
+                Recomputed from the latest version — accepting or editing a suggested change updates this score.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-base font-semibold text-slate-900">
                 Draft — version {latestVersion.versionNumber}
               </h2>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
                 {latestVersion.content}
               </p>
+              {(isOwner || canReview) && submission.status !== 'PUBLISHED' && (
+                <DraftEditor submissionId={submission.id} initialContent={latestVersion.content} />
+              )}
             </div>
 
             {(submission.imageStorageKey || submission.imageData) && submission.imageMimeType && (
