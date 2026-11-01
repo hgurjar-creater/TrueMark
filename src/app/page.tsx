@@ -23,13 +23,6 @@ const features = [
   },
 ]
 
-const portals = [
-  { role: 'SUPER_ADMIN', label: 'Super Admin', description: 'Create brand workspaces, provision brand Admins and review product feedback.', access: 'Contact TrueMark for Super Admin credentials', accent: 'bg-fuchsia-100 text-fuchsia-700' },
-  { role: 'ADMIN', label: 'Admin', description: 'Manage one brand’s guidance and create its Manager or Creator accounts.', access: 'Request credentials from TrueMark or your Super Admin', accent: 'bg-violet-100 text-violet-700' },
-  { role: 'MANAGER', label: 'Manager', description: 'Review submissions, comment and approve publication.', access: 'Request credentials from your Admin', accent: 'bg-amber-100 text-amber-700' },
-  { role: 'CREATOR', label: 'Creator', description: 'Submit drafts and resolve source-backed findings.', access: 'Request credentials from your Admin', accent: 'bg-sky-100 text-sky-700' },
-] as const
-
 const homeByRole = { SUPER_ADMIN: '/superadmin', ADMIN: '/admin', MANAGER: '/dashboard', CREATOR: '/dashboard' } as const
 
 function ReviewPreview() {
@@ -119,7 +112,7 @@ export default async function Home() {
             {registrationOpen ? (
               <Link href="/register" className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/10 transition hover:-translate-y-0.5">Sign up</Link>
             ) : (
-              <a href="#portals" className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/10 transition hover:-translate-y-0.5">Choose a portal</a>
+              <Link href="/login" className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/10 transition hover:-translate-y-0.5">Sign in</Link>
             )}
           </nav>
         </div>
@@ -139,11 +132,10 @@ export default async function Home() {
                 Create the admin account <span className="transition group-hover:translate-x-0.5" aria-hidden="true">→</span>
               </Link>
             ) : (
-              <Link href="/login?role=CREATOR" className="group inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-violet-900/15 transition hover:-translate-y-0.5 hover:shadow-violet-900/20">
-                Creator sign in <span className="transition group-hover:translate-x-0.5" aria-hidden="true">→</span>
+              <Link href="/login" className="group inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-violet-900/15 transition hover:-translate-y-0.5 hover:shadow-violet-900/20">
+                Sign in <span className="transition group-hover:translate-x-0.5" aria-hidden="true">→</span>
               </Link>
             )}
-            <a href="#portals" className="rounded-full border border-slate-300/80 bg-white/70 px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-violet-300 hover:bg-white">All four portals</a>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
             <span className="inline-flex items-center gap-1.5"><span className="text-violet-600">✓</span> Approved sources</span>
@@ -153,31 +145,6 @@ export default async function Home() {
         </div>
         <div className="relative -mx-3 mt-4 sm:mx-0 lg:mt-0">
           <ReviewPreview />
-        </div>
-      </section>
-
-      <section id="portals" className="relative z-10 mx-auto w-full max-w-7xl scroll-mt-24 px-5 pb-16 sm:px-8 sm:pb-20">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">Workspace access</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Choose your portal</h2>
-          </div>
-          <p className="max-w-md text-sm leading-6 text-slate-500">
-            {registrationOpen
-              ? 'The first sign-up on a new installation becomes Super Admin. Super Admin creates each brand and assigns its Admin.'
-              : 'Super Admin provisions brand Admins. Each brand Admin creates accounts for that brand’s Managers and Creators.'}
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {portals.map((portal, index) => (
-            <article key={portal.role} data-role={portal.role.toLowerCase()} className="portal-glass-card group relative isolate overflow-hidden rounded-[24px] border p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(50,38,89,.14)]">
-              <span className={`grid h-10 w-10 place-items-center rounded-2xl text-xs font-bold ${portal.accent}`}>0{index + 1}</span>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">{portal.label}</h3>
-              <p className="mt-1 min-h-12 text-xs leading-5 text-slate-600">{portal.description}</p>
-              <p className="mt-3 text-[10px] font-medium text-slate-400">{portal.access}</p>
-              <Link href={`/login?role=${portal.role}`} className="mt-4 inline-flex rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700">Sign in as {portal.label}</Link>
-            </article>
-          ))}
         </div>
       </section>
 

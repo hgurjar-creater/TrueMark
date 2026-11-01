@@ -141,6 +141,42 @@ The labelled set is in `evaluation/labelled-examples.json`. Each brand Admin pan
 
 Text and visual review execute concurrently inside the worker. Approved-source BM25 indexes are cached per workspace and rebuilt when the library revision changes. Submission queries and source filters have database indexes. New images are normalized to WebP at a maximum 1600-pixel edge and stored outside the database. Set `S3_BUCKET` and the S3-compatible settings in `.env` for a private AWS S3/R2 bucket; otherwise development uses `.data/private-assets`. Do not use the local filesystem fallback on ephemeral hosting.
 
+## Round 3 measurement commands
+
+The three Round 3 commitments are measured with the following commands. Start
+the app first (`npm run dev`, or `npm start` plus `npm run start:worker` on a
+deployment) so the API is reachable.
+
+1. **Evidence-backed findings and decision trail** — full-population citation
+   audit. Re-verifies every retained finding against its approved source and
+   the verbatim draft span (not just the labelled set). The same report is
+   shown in Admin → Quality lab and re-runnable there.
+
+   ```bash
+   node scripts/verify-citations.mjs   # target: 100% valid source IDs and verbatim spans
+   ```
+
+2. **Intent-preserving fix suggestions** — record the five creator test
+   sessions in `evaluation/creator-tests.json` following
+   `evaluation/creator-test-protocol.md`, then generate the report:
+
+   ```bash
+   node scripts/creator-test-report.mjs   # target: >= 60% accepted or lightly edited
+   ```
+
+3. **Guideline-gap insights** — seeds an isolated evaluation workspace with 5
+   deliberately unclear rules and 3 precise control rules, records 5 decisions
+   per rule (60% dismissal for unclear, 0% for controls), and measures what the
+   insight engine surfaces:
+
+   ```bash
+   node scripts/insights-demo.mjs   # target: >= 4 of 5 unclear rules surfaced, no false positives
+   ```
+
+Each command saves its machine-readable result under `evaluation/`
+(`citation-validation.json`, `creator-test-results.json`,
+`insights-results.json`) for the final submission PDF.
+
 ## Team contributions
 
 The Round 1 plan assigns these work areas; update them to match the final work completed and individual commits before submitting:

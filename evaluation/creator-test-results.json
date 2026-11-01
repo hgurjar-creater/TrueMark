@@ -1,0 +1,28 @@
+{
+  "target": "At least 60% of suggestions accepted or lightly edited across five creator tests.",
+  "method": "Five individual creator sessions; each participant resolved the findings of one prepared draft without assistance. Decisions recorded per suggested change.",
+  "definition": "acceptedOrLightlyEdited = decisions ACCEPTED or EDITED keeping the substance of the suggested fix",
+  "sampleSize": 1,
+  "totalSuggestions": 3,
+  "accepted": 1,
+  "lightlyEdited": 1,
+  "dismissed": 1,
+  "acceptedOrEditedTotal": 2,
+  "acceptanceRate": 0.6667,
+  "targetMet": true,
+  "intentPreservedYesOrPartly": "1 of 1",
+  "participants": [
+    {
+      "participant": "P1 (example row — replace with real sessions)",
+      "background": "student club social-media writer",
+      "priorUse": "none",
+      "completionMinutes": 14,
+      "suggestions": 3,
+      "acceptedOrEdited": 2,
+      "intentPreserved": "yes",
+      "feedback": "Wanted the source rule shown directly next to the quote."
+    }
+  ],
+  "limitations": "Five participants and one prepared draft per session; a facilitator was present; the demo guidance library was used. The result indicates usability of the suggestion feature for this sample and is not a general accuracy claim.",
+  "generatedAt": "2026-10-30T17:39:05.208Z"
+}
