@@ -108,7 +108,6 @@ export default async function Home() {
           <Link href="/" aria-label="TrueMark home"><Logo /></Link>
           <nav className="flex items-center gap-2 sm:gap-5" aria-label="Main navigation">
             <a href="#how-it-works" className="hidden text-sm font-medium text-slate-600 transition hover:text-violet-700 sm:inline">How it works</a>
-            <Link href="/login" className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-violet-50">Sign in</Link>
             {registrationOpen ? (
               <Link href="/register" className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/10 transition hover:-translate-y-0.5">Sign up</Link>
             ) : (
