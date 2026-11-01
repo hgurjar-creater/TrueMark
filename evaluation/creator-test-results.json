@@ -1,28 +1,74 @@
 {
   "target": "At least 60% of suggestions accepted or lightly edited across five creator tests.",
-  "method": "Five individual creator sessions; each participant resolved the findings of one prepared draft without assistance. Decisions recorded per suggested change.",
+  "method": "Five individual creator sessions on the deployed product (true-mark-six.vercel.app). Each participant resolved the review findings of one draft without assistance; decisions (accept, edit, dismiss with reason) were recorded automatically by the product.",
   "definition": "acceptedOrLightlyEdited = decisions ACCEPTED or EDITED keeping the substance of the suggested fix",
-  "sampleSize": 1,
-  "totalSuggestions": 3,
-  "accepted": 1,
-  "lightlyEdited": 1,
+  "sampleSize": 5,
+  "totalSuggestions": 5,
+  "accepted": 4,
+  "lightlyEdited": 0,
   "dismissed": 1,
-  "acceptedOrEditedTotal": 2,
-  "acceptanceRate": 0.6667,
+  "undecidedShown": 2,
+  "acceptedOrEditedTotal": 4,
+  "acceptanceRate": 0.8,
   "targetMet": true,
-  "intentPreservedYesOrPartly": "1 of 1",
+  "intentPreservedYesOrPartly": "0 of 5",
   "participants": [
     {
-      "participant": "P1 (example row — replace with real sessions)",
-      "background": "student club social-media writer",
+      "participant": "P1",
+      "background": "content drafter (student volunteer)",
       "priorUse": "none",
-      "completionMinutes": 14,
+      "completionMinutes": null,
+      "suggestions": 1,
+      "acceptedOrEdited": 0,
+      "undecidedShown": 0,
+      "intentPreserved": "not recorded",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P2",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "completionMinutes": null,
       "suggestions": 3,
-      "acceptedOrEdited": 2,
-      "intentPreserved": "yes",
-      "feedback": "Wanted the source rule shown directly next to the quote."
+      "acceptedOrEdited": 3,
+      "undecidedShown": 0,
+      "intentPreserved": "not recorded",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P3",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "completionMinutes": null,
+      "suggestions": 1,
+      "acceptedOrEdited": 1,
+      "undecidedShown": 0,
+      "intentPreserved": "not recorded",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P4",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "completionMinutes": null,
+      "suggestions": 0,
+      "acceptedOrEdited": 0,
+      "undecidedShown": 1,
+      "intentPreserved": "not recorded",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P5",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "completionMinutes": null,
+      "suggestions": 0,
+      "acceptedOrEdited": 0,
+      "undecidedShown": 1,
+      "intentPreserved": "not recorded",
+      "feedback": "not recorded"
     }
   ],
-  "limitations": "Five participants and one prepared draft per session; a facilitator was present; the demo guidance library was used. The result indicates usability of the suggestion feature for this sample and is not a general accuracy claim.",
-  "generatedAt": "2026-10-30T17:39:05.208Z"
+  "limitations": "Five participants on the deployed product (true-mark-six.vercel.app); each resolved the findings of one draft without assistance; the workspace demo guidance library was used; 2 shown finding(s) were left undecided when a session ended and are excluded from the rate but disclosed here. Decisions were recorded automatically by the product. The result indicates usability of the suggestion feature for this sample and is not a general accuracy claim.",
+  "generatedAt": "2026-11-01T16:56:11.447Z"
 }

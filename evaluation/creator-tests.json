@@ -1,22 +1,79 @@
 {
-  "method": "Five individual creator sessions; each participant resolved the findings of one prepared draft without assistance. Decisions recorded per suggested change.",
+  "method": "Five individual creator sessions on the deployed product (true-mark-six.vercel.app). Each participant resolved the review findings of one draft without assistance; decisions (accept, edit, dismiss with reason) were recorded automatically by the product.",
   "definition": "acceptedOrLightlyEdited = decisions ACCEPTED or EDITED keeping the substance of the suggested fix",
   "participants": [
     {
-      "participant": "P1 (example row — replace with real sessions)",
-      "background": "student club social-media writer",
+      "participant": "P1",
+      "background": "content drafter (student volunteer)",
       "priorUse": "none",
-      "startedAt": "2026-11-01T10:00:00.000Z",
-      "completedAt": "2026-11-01T10:14:00.000Z",
-      "completionMinutes": 14,
       "suggestions": [
-        { "sourceCode": "T-001", "decision": "ACCEPTED" },
-        { "sourceCode": "R-002", "decision": "EDITED", "note": "kept the fix, softened wording" },
-        { "sourceCode": "R-004", "decision": "DISMISSED", "note": "price quote was intentional" }
+        {
+          "sourceCode": "F-001",
+          "decision": "DISMISSED",
+          "note": "i want that line beacuse of attractive in nature"
+        }
       ],
-      "intentPreserved": "yes",
-      "intentQuote": "It kept my point, it just said it more safely.",
-      "feedback": "Wanted the source rule shown directly next to the quote."
+      "intentPreserved": "not recorded",
+      "intentQuote": "",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P2",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "suggestions": [
+        {
+          "sourceCode": "T-101",
+          "decision": "ACCEPTED"
+        },
+        {
+          "sourceCode": "T-103",
+          "decision": "ACCEPTED"
+        },
+        {
+          "sourceCode": "T-104",
+          "decision": "ACCEPTED"
+        }
+      ],
+      "intentPreserved": "not recorded",
+      "intentQuote": "",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P3",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "suggestions": [
+        {
+          "sourceCode": "T-102",
+          "decision": "ACCEPTED"
+        }
+      ],
+      "intentPreserved": "not recorded",
+      "intentQuote": "",
+      "feedback": "not recorded"
+    },
+    {
+      "participant": "P4",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "suggestions": [],
+      "sessionNote": "One evidence finding (R-001) was shown but left undecided when the session ended; disclosed in the limitations.",
+      "intentPreserved": "not recorded",
+      "intentQuote": "",
+      "feedback": "not recorded",
+      "undecidedShown": 1
+    },
+    {
+      "participant": "P5",
+      "background": "content drafter (student volunteer)",
+      "priorUse": "none",
+      "suggestions": [],
+      "sessionNote": "One evidence finding (R-001) was shown but left undecided when the session ended; disclosed in the limitations.",
+      "intentPreserved": "not recorded",
+      "intentQuote": "",
+      "feedback": "not recorded",
+      "undecidedShown": 1
     }
   ]
 }
