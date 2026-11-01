@@ -3,7 +3,20 @@ import examples from '../../../../../evaluation/labelled-examples.json'
 import { withAuth, writeAudit } from '@/lib/api'
 import { db } from '@/lib/db'
 import { runReview } from '@/lib/review/run-review'
+import { auditCitations } from '@/lib/review/citation-audit'
 import { workspaceIdOrError } from '@/lib/workspace'
+
+// Round 3 commitment 1 evidence: full-population citation audit over every
+// retained finding. A brand Admin audits their own workspace; the platform
+// Super Admin can audit all workspaces at once.
+export const GET = withAuth(['ADMIN', 'SUPER_ADMIN'], async (_req, session) => {
+  const audit = await auditCitations(session.role === 'SUPER_ADMIN' ? null : session.workspaceId)
+  await writeAudit('CITATION_AUDIT_RUN', 'Evaluation', {
+    actorId: session.id,
+    metadata: { scope: audit.scope, totalFindings: audit.totalFindings, invalid: audit.invalid },
+  })
+  return NextResponse.json({ citationAudit: audit })
+})
 
 export const POST = withAuth(['ADMIN'], async (_req, session) => {
   const workspaceId = workspaceIdOrError(session)

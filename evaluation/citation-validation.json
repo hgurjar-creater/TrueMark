@@ -1,0 +1,27 @@
+{
+  "scope": "ALL_WORKSPACES",
+  "totalFindings": 62,
+  "valid": 62,
+  "invalid": 0,
+  "citationValidity": 1,
+  "byStatus": {
+    "ACCEPTED": {
+      "total": 27,
+      "valid": 27
+    },
+    "EDITED": {
+      "total": 1,
+      "valid": 1
+    },
+    "DISMISSED": {
+      "total": 21,
+      "valid": 21
+    },
+    "OPEN": {
+      "total": 13,
+      "valid": 13
+    }
+  },
+  "issues": [],
+  "generatedAt": "2026-10-30T17:36:54.375Z"
+}

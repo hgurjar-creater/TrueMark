@@ -1,0 +1,116 @@
+{
+  "target": "Surface at least 4 of 5 seeded unclear rules; report false positives.",
+  "workspace": "Round 3 Insights Evaluation",
+  "seededUnclearRules": [
+    "U-001",
+    "U-002",
+    "U-003",
+    "U-004",
+    "U-005"
+  ],
+  "controlRules": [
+    "C-001",
+    "C-002",
+    "C-003"
+  ],
+  "decisionsPerRule": 5,
+  "dismissalPattern": "60% for unclear rules, 0% for controls",
+  "surfacedInsights": [
+    "U-005",
+    "U-004",
+    "U-003",
+    "U-002",
+    "U-001"
+  ],
+  "surfacedUnclearCount": 5,
+  "targetMet": true,
+  "falsePositives": [],
+  "insightDetails": [
+    {
+      "sourceKey": "cmvv968m70000120leeigf5aa:RULE:cmvv968vj000e120lpqalzi9n",
+      "sourceType": "RULE",
+      "sourceId": "cmvv968vj000e120lpqalzi9n",
+      "sourceCode": "U-005",
+      "sourceTitle": "Maintain quality",
+      "sourceText": "All published work must meet quality expectations.",
+      "decisionCount": 5,
+      "dismissalRate": 60,
+      "sampleNotes": [
+        "Round 4: this guidance is too vague to apply here.",
+        "Round 3: this guidance is too vague to apply here.",
+        "Round 1: this guidance is too vague to apply here."
+      ],
+      "clarificationDraft": "Clarification to review: All published work must meet quality expectations.\n\nThis guidance was dismissed in 3 of 5 recorded decisions (60%). Recent dismissal reasons include: “Round 4: this guidance is too vague to apply here.”; “Round 3: this guidance is too vague to apply here.”; “Round 1: this guidance is too vague to apply here.”.\n\nPlease specify the intended scope, examples, and any exceptions before updating the approved guidance.",
+      "status": "DRAFT"
+    },
+    {
+      "sourceKey": "cmvv968m70000120leeigf5aa:RULE:cmvv968vi000c120lei79bgts",
+      "sourceType": "RULE",
+      "sourceId": "cmvv968vi000c120lei79bgts",
+      "sourceCode": "U-004",
+      "sourceTitle": "Engage naturally",
+      "sourceText": "Captions should engage the audience in a natural way.",
+      "decisionCount": 5,
+      "dismissalRate": 60,
+      "sampleNotes": [
+        "Round 4: this guidance is too vague to apply here.",
+        "Round 3: this guidance is too vague to apply here.",
+        "Round 1: this guidance is too vague to apply here."
+      ],
+      "clarificationDraft": "Clarification to review: Captions should engage the audience in a natural way.\n\nThis guidance was dismissed in 3 of 5 recorded decisions (60%). Recent dismissal reasons include: “Round 4: this guidance is too vague to apply here.”; “Round 3: this guidance is too vague to apply here.”; “Round 1: this guidance is too vague to apply here.”.\n\nPlease specify the intended scope, examples, and any exceptions before updating the approved guidance.",
+      "status": "DRAFT"
+    },
+    {
+      "sourceKey": "cmvv968m70000120leeigf5aa:RULE:cmvv968vg000a120lghzjct5a",
+      "sourceType": "RULE",
+      "sourceId": "cmvv968vg000a120lghzjct5a",
+      "sourceCode": "U-003",
+      "sourceTitle": "Stay on brand",
+      "sourceText": "Keep the design and message consistent with the brand.",
+      "decisionCount": 5,
+      "dismissalRate": 60,
+      "sampleNotes": [
+        "Round 4: this guidance is too vague to apply here.",
+        "Round 3: this guidance is too vague to apply here.",
+        "Round 1: this guidance is too vague to apply here."
+      ],
+      "clarificationDraft": "Clarification to review: Keep the design and message consistent with the brand.\n\nThis guidance was dismissed in 3 of 5 recorded decisions (60%). Recent dismissal reasons include: “Round 4: this guidance is too vague to apply here.”; “Round 3: this guidance is too vague to apply here.”; “Round 1: this guidance is too vague to apply here.”.\n\nPlease specify the intended scope, examples, and any exceptions before updating the approved guidance.",
+      "status": "DRAFT"
+    },
+    {
+      "sourceKey": "cmvv968m70000120leeigf5aa:RULE:cmvv968vf0008120lssaam0od",
+      "sourceType": "RULE",
+      "sourceId": "cmvv968vf0008120lssaam0od",
+      "sourceCode": "U-002",
+      "sourceTitle": "Be creative",
+      "sourceText": "Posts should show creativity where suitable.",
+      "decisionCount": 5,
+      "dismissalRate": 60,
+      "sampleNotes": [
+        "Round 4: this guidance is too vague to apply here.",
+        "Round 3: this guidance is too vague to apply here.",
+        "Round 1: this guidance is too vague to apply here."
+      ],
+      "clarificationDraft": "Clarification to review: Posts should show creativity where suitable.\n\nThis guidance was dismissed in 3 of 5 recorded decisions (60%). Recent dismissal reasons include: “Round 4: this guidance is too vague to apply here.”; “Round 3: this guidance is too vague to apply here.”; “Round 1: this guidance is too vague to apply here.”.\n\nPlease specify the intended scope, examples, and any exceptions before updating the approved guidance.",
+      "status": "DRAFT"
+    },
+    {
+      "sourceKey": "cmvv968m70000120leeigf5aa:RULE:cmvv968vc0006120l7xv6rt4w",
+      "sourceType": "RULE",
+      "sourceId": "cmvv968vc0006120l7xv6rt4w",
+      "sourceCode": "U-001",
+      "sourceTitle": "Use the right tone",
+      "sourceText": "Content should feel appropriate to the audience.",
+      "decisionCount": 5,
+      "dismissalRate": 60,
+      "sampleNotes": [
+        "Round 4: this guidance is too vague to apply here.",
+        "Round 3: this guidance is too vague to apply here.",
+        "Round 1: this guidance is too vague to apply here."
+      ],
+      "clarificationDraft": "Clarification to review: Content should feel appropriate to the audience.\n\nThis guidance was dismissed in 3 of 5 recorded decisions (60%). Recent dismissal reasons include: “Round 4: this guidance is too vague to apply here.”; “Round 3: this guidance is too vague to apply here.”; “Round 1: this guidance is too vague to apply here.”.\n\nPlease specify the intended scope, examples, and any exceptions before updating the approved guidance.",
+      "status": "DRAFT"
+    }
+  ],
+  "generatedAt": "2026-10-30T17:35:24.517Z"
+}
