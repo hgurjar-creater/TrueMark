@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const { name, email, password, setupSecret } = parsed.data
 
   const configuredSecret = process.env.SUPER_ADMIN_SETUP_SECRET
-  const provided = Buffer.from(setupSecret)
+  const provided = Buffer.from(setupSecret ?? '')
   const configured = Buffer.from(configuredSecret ?? '')
   if (!configuredSecret || provided.length !== configured.length || !timingSafeEqual(provided, configured)) {
     return NextResponse.json({ error: 'Super Admin setup is restricted. Contact TrueMark for the one-time setup code.' }, { status: 403 })

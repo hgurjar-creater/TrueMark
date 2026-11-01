@@ -90,6 +90,11 @@ export const POST = withAuth(['ADMIN', 'MANAGER', 'CREATOR'], async (req: NextRe
       const optimized = await sharp(parsed.image.buffer, { failOn: 'error', limitInputPixels: 40_000_000 })
         .rotate()
         .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+        // Transparent PNGs are flattened onto white (the light-table
+        // convention for reviewing brand assets). Without this, AI review and
+        // palette sampling composite transparency as black and report false
+        // low-contrast findings for dark wordmarks on clear backgrounds.
+        .flatten({ background: '#ffffff' })
         .webp({ quality: 82, effort: 4 })
         .toBuffer()
       const key = newCreativeKey()

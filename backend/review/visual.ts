@@ -191,7 +191,7 @@ export async function reviewBrandImage(input: {
       contents: [{ role: 'user', parts }],
       generationConfig: { temperature: 0.1, maxOutputTokens: 1800, responseMimeType: 'application/json' },
     }),
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(60_000),
   })
   const payload: unknown = await response.json().catch(() => null)
   if (!response.ok) {

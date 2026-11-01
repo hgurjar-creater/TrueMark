@@ -95,7 +95,7 @@ export async function geminiReview(
         responseMimeType: 'application/json',
       },
     }),
-    signal: AbortSignal.timeout(12_000),
+    signal: AbortSignal.timeout(45_000),
   })
 
   const payload: unknown = await response.json().catch(() => null)
