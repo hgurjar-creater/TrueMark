@@ -23,6 +23,23 @@ function syllableEstimate(word: string) {
   return Math.max(1, groups - silentE)
 }
 
+
+// Round 3 enhancement: surface the hardest words so the reading-ease score is
+// actionable — creators see exactly which words to simplify.
+export function complexWordsIn(content: string, limit = 6): Array<{ word: string; syllables: number }> {
+  const seen = new Map<string, number>()
+  for (const word of content.match(/[A-Za-z]+(?:['’][A-Za-z]+)?/g) ?? []) {
+    const syllables = syllableEstimate(word)
+    if (syllables < 3) continue
+    const key = word.toLowerCase()
+    if (!seen.has(key) || seen.get(key)! < syllables) seen.set(key, syllables)
+  }
+  return [...seen.entries()]
+    .map(([word, syllables]) => ({ word, syllables }))
+    .sort((a, b) => b.syllables - a.syllables)
+    .slice(0, limit)
+}
+
 function levelFor(score: number | null) {
   if (score === null) return 'Not enough text to estimate'
   if (score >= 90) return 'Very easy'

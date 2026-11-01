@@ -1,4 +1,4 @@
-import { auditAccessibility } from './accessibility'
+import { auditAccessibility, complexWordsIn } from './accessibility'
 
 // Round 3: a live accessibility score for a submission. Unlike the stored
 // accessibilityReview (computed once from the original text), this score is
@@ -26,20 +26,24 @@ export interface AccessibilityScore {
   components: ScoreComponent[]
 }
 
-function readingEasePoints(readingEase: number | null): { points: number; detail: string } {
+function readingEasePoints(readingEase: number | null, content: string): { points: number; detail: string } {
+  const hard = complexWordsIn(content)
+  const hardHint = hard.length
+    ? ` Complex words to consider simplifying: ${hard.map((item) => `${item.word} (${item.syllables})`).join(', ')}.`
+    : ''
   if (readingEase === null) return { points: 30, detail: 'Draft is too short to estimate reading ease.' }
   if (readingEase >= 80) return { points: 40, detail: `Reading ease ${readingEase}/100 — very easy to read.` }
   if (readingEase >= 70) return { points: 34, detail: `Reading ease ${readingEase}/100 — easy to read.` }
-  if (readingEase >= 60) return { points: 28, detail: `Reading ease ${readingEase}/100 — plain English.` }
-  if (readingEase >= 50) return { points: 20, detail: `Reading ease ${readingEase}/100 — fairly difficult.` }
-  if (readingEase >= 30) return { points: 8, detail: `Reading ease ${readingEase}/100 — difficult.` }
-  return { points: 0, detail: `Reading ease ${readingEase}/100 — very difficult.` }
+  if (readingEase >= 60) return { points: 28, detail: `Reading ease ${readingEase}/100 — plain English.${hardHint}` }
+  if (readingEase >= 50) return { points: 20, detail: `Reading ease ${readingEase}/100 — fairly difficult.${hardHint}` }
+  if (readingEase >= 30) return { points: 8, detail: `Reading ease ${readingEase}/100 — difficult.${hardHint}` }
+  return { points: 0, detail: `Reading ease ${readingEase}/100 — very difficult.${hardHint}` }
 }
 
 export function computeAccessibilityScore(input: AccessibilityScoreInput): AccessibilityScore {
   const audit = auditAccessibility(input.content)
 
-  const reading = readingEasePoints(audit.readingEase)
+  const reading = readingEasePoints(audit.readingEase, input.content)
 
   const longSentences = audit.issues.filter((issue) => issue.category === 'SENTENCE_LENGTH').length
   const sentencePoints = longSentences === 0 ? 15 : longSentences === 1 ? 10 : longSentences === 2 ? 6 : 2
