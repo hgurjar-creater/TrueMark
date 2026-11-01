@@ -51,6 +51,17 @@ async function api(path, options = {}) {
   return { status: res.status, body }
 }
 
+async function waitForReviewSettled(id) {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const status = await api(`/api/submissions/${id}/review-status`)
+    if (status.status === 200 && status.body.status && status.body.status !== 'PENDING' && status.body.status !== 'PROCESSING') {
+      return status.body
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+  throw new Error(`Review for ${id} did not settle within 40 seconds`)
+}
+
 async function login(email, password = DEMO_PASSWORD) {
   cookie = ''
   const res = await api('/api/auth/login', {
@@ -93,6 +104,10 @@ async function main() {
   // the provider (Gemini or mock) adds varies.
   assert(created.body.findings >= 4, `review produced findings (${created.body.findings})`)
   const submissionId = created.body.id
+
+  // Reviews run asynchronously in the worker queue — poll until they settle.
+  const settled = await waitForReviewSettled(submissionId)
+  assert(settled.status !== 'PENDING' && settled.status !== 'PROCESSING', `review settled (status: ${settled.status})`)
 
   const page = await api(`/submissions/${submissionId}`)
   assert(page.status === 200 && page.body.includes('Findings'), 'review interface renders')
@@ -328,10 +343,11 @@ async function main() {
   const visualResponse = await fetch(`${BASE}/api/submissions`, { method: 'POST', headers: { cookie }, body: visualForm })
   const visualBody = await visualResponse.json()
   assert(visualResponse.status === 201 && Boolean(visualBody.id), 'image creative accepted and reviewed through the submission flow')
+  await waitForReviewSettled(visualBody.id)
   const visualRecord = visualBody.id ? await db.submission.findUnique({ where: { id: visualBody.id } }) : null
   const visualReport = visualRecord?.visualReview ? JSON.parse(visualRecord.visualReview) : null
   const accessibility = visualRecord?.accessibilityReview ? JSON.parse(visualRecord.accessibilityReview) : null
-  assert(Boolean(visualRecord?.imageData && visualReport?.width === 160 && visualReport?.dominantColors?.length), 'image, dimensions and sampled palette persist with the submission')
+  assert(Boolean((visualRecord?.imageData || visualRecord?.imageStorageKey) && visualReport?.width === 160 && visualReport?.dominantColors?.length), 'image, dimensions and sampled palette persist with the submission')
   assert(Boolean(accessibility && accessibility.issues.some((issue) => issue.category === 'READABILITY')), 'accessibility review checks reading ease on image submissions')
   const visualDetail = await api(`/submissions/${visualBody.id}`)
   assert(visualDetail.status === 200 && visualDetail.body.includes('Visual review') && visualDetail.body.includes('Accessibility check'), 'visual and accessibility results render on the review page')
@@ -345,6 +361,7 @@ async function main() {
   const repeatSubmission = await api('/api/submissions', {
     method: 'POST', body: JSON.stringify({ title: 'Repeated wording insight check', channel: 'Blog post', purpose: 'Create repeated decisions for guideline insights.', content: repeatTermDraft }),
   })
+  await waitForReviewSettled(repeatSubmission.body.id)
   const repeatFindings = repeatSubmission.body.id ? await db.finding.findMany({ where: { submissionId: repeatSubmission.body.id, sourceCode: 'T-001' } }) : []
   assert(repeatFindings.length >= 5, 'repeat-use sample produces five decisions on one guidance source')
   for (let index = 0; index < Math.min(5, repeatFindings.length); index += 1) {
